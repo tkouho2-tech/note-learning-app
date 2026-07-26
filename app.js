@@ -727,56 +727,90 @@ function resetStats() {
 // ==========================================================================
 
 function updateExplorer() {
-    const explorerButtons = document.getElementById('explorer-buttons');
-    const badge = document.getElementById('explorer-clef-badge');
-    if (!explorerButtons) return;
+    const sortedTreble = [...NOTES.treble].sort((a, b) => a.step - b.step);
+    const sortedBass = [...NOTES.bass].sort((a, b) => a.step - b.step);
 
-    // Pick active clef (if 'both' is selected, default to 'treble' for explorer)
-    let clef = state.settings.clef;
-    if (clef === 'both') {
-        clef = 'treble';
-    }
-    
-    badge.innerText = clef === 'treble' ? 'ト音記号 (𝄞)' : 'ヘ音記号 (𝄢)';
+    const renderClefExplorer = (clef, notes, containerId) => {
+        const wrapper = document.getElementById(containerId);
+        if (!wrapper) return;
 
-    // Get notes list based on current difficulty
-    const notesList = getFilteredNotes(clef, state.settings.difficulty);
+        const staffLinesY = [50, 70, 90, 110, 130];
+        
+        let svgHtml = `
+            <svg viewBox="0 0 860 190" xmlns="http://www.w3.org/2000/svg">
+                <!-- 五線譜 (5 staff lines) -->
+        `;
 
-    explorerButtons.innerHTML = '';
-    
-    notesList.forEach((note, idx) => {
-        const btn = document.createElement('button');
-        btn.className = 'explorer-btn';
-        
-        let label = "";
-        if (state.settings.notation === 'syllable') label = note.syllable;
-        else if (state.settings.notation === 'letter') label = note.letter;
-        else label = note.japanese;
-        
-        // Add note height descriptor to distinguish octaves (e.g. C4 vs C5)
-        // for better reference clarity
-        btn.innerText = `${label} (${note.id})`;
-        
-        btn.addEventListener('click', () => {
-            // Remove active class from all other explorer buttons
-            explorerButtons.querySelectorAll('.explorer-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            
-            // Render note in explorer canvas
-            renderMusicNote(clef, note, 'explorer-canvas-wrapper');
-            
-            // Play note sound
-            synth.playNote(note.freq);
+        staffLinesY.forEach(y => {
+            svgHtml += `<line class="staff-line" x1="20" y1="${y}" x2="840" y2="${y}" stroke="rgba(255,255,255,0.15)" stroke-width="1.5" />`;
         });
-        
-        explorerButtons.appendChild(btn);
 
-        // Highlight first note as default on render
-        if (idx === 0) {
-            btn.classList.add('active');
-            renderMusicNote(clef, note, 'explorer-canvas-wrapper');
+        // 音部記号 (Noto Music フォントを使用)
+        if (clef === 'treble') {
+            svgHtml += `<text x="25" y="130" font-family="'Noto Music', 'Segoe UI Symbol', sans-serif" font-size="95" fill="var(--text-primary)" style="opacity: 0.8; user-select: none;">𝄞</text>`;
+        } else {
+            svgHtml += `<text x="25" y="96" font-family="'Noto Music', 'Segoe UI Symbol', sans-serif" font-size="75" fill="var(--text-primary)" style="opacity: 0.8; user-select: none;">𝄢</text>`;
         }
-    });
+
+        // 各音符の描画
+        notes.forEach((note, idx) => {
+            const x = 85 + idx * 44;
+            const y = 130 - (note.step * 10);
+            const isC = note.syllable === "ド";
+
+            // 加線 (Ledger lines)
+            if (y <= 30) {
+                for (let ly = 30; ly >= y; ly -= 20) {
+                    svgHtml += `<line class="ledger-line" x1="${x - 18}" y1="${ly}" x2="${x + 18}" y2="${ly}" stroke="rgba(255,255,255,0.4)" stroke-width="2" />`;
+                }
+            } else if (y >= 150) {
+                for (let ly = 150; ly <= y; ly += 20) {
+                    svgHtml += `<line class="ledger-line" x1="${x - 18}" y1="${ly}" x2="${x + 18}" y2="${ly}" stroke="rgba(255,255,255,0.4)" stroke-width="2" />`;
+                }
+            }
+
+            // 音名表記の選択
+            let label = "";
+            if (state.settings.notation === 'syllable') label = note.syllable;
+            else if (state.settings.notation === 'letter') label = note.letter;
+            else label = note.japanese;
+
+            const noteClass = isC ? "explorer-notehead is-c" : "explorer-notehead";
+            const textClass = isC ? "explorer-notename is-c" : "explorer-notename";
+
+            svgHtml += `
+                <g class="explorer-note-group" data-freq="${note.freq}">
+                    <!-- 音符ヘッド -->
+                    <ellipse cx="${x}" cy="${y}" rx="13" ry="9" transform="rotate(-20, ${x}, ${y})" class="${noteClass}" style="transition: transform 0.15s ease-out, fill 0.2s, filter 0.2s;" />
+                    <!-- 中空部分 -->
+                    <ellipse cx="${x}" cy="${y}" rx="5.5" ry="3" transform="rotate(-20, ${x}, ${y})" fill="#0f172a" />
+                    <!-- 音名ラベル -->
+                    <text x="${x}" y="168" text-anchor="middle" class="${textClass}">${label}</text>
+                </g>
+            `;
+        });
+
+        svgHtml += `</svg>`;
+        wrapper.innerHTML = svgHtml;
+
+        // 音をクリックした時の再生処理イベントバインド
+        wrapper.querySelectorAll('.explorer-note-group').forEach(group => {
+            const freq = parseFloat(group.getAttribute('data-freq'));
+            group.addEventListener('click', () => {
+                synth.playNote(freq);
+                
+                // クリック時の一時的なスケールアニメーション
+                const head = group.querySelector('.explorer-notehead');
+                head.style.transform = 'scale(1.25) rotate(-20deg)';
+                setTimeout(() => {
+                    head.style.transform = '';
+                }, 150);
+            });
+        });
+    };
+
+    renderClefExplorer('treble', sortedTreble, 'explorer-treble-wrapper');
+    renderClefExplorer('bass', sortedBass, 'explorer-bass-wrapper');
 }
 
 // ==========================================================================
