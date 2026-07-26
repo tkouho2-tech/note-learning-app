@@ -72,20 +72,15 @@
 
                 <!-- 音符と音の事前確認パネル (音符図鑑) -->
                 <div class="glass-card explorer-panel">
-                    <h2>音符と音の確認 (音符図鑑)</h2>
+                    <div class="explorer-header">
+                        <h2>音符と音の確認 (音符図鑑)</h2>
+                        <span id="explorer-clef-badge" class="badge">ト音記号</span>
+                    </div>
                     <p class="explorer-desc">音符や音名をクリックすると、ピアノの音が鳴ります。ピンク色は「ド」の音です。</p>
                     
                     <div class="explorer-scroll-container">
-                        <div class="explorer-section-title">ト音記号 (𝄞)</div>
-                        <div id="explorer-treble-wrapper" class="explorer-canvas-scroll">
-                            <!-- ここにト音記号の横長SVGが生成される -->
-                        </div>
-                    </div>
-
-                    <div class="explorer-scroll-container">
-                        <div class="explorer-section-title">ヘ音記号 (𝄢)</div>
-                        <div id="explorer-bass-wrapper" class="explorer-canvas-scroll">
-                            <!-- ここにヘ音記号の横長SVGが生成される -->
+                        <div id="explorer-canvas-wrapper" class="explorer-canvas-scroll">
+                            <!-- ここに選択された記号の横長SVGが動的に生成される -->
                         </div>
                     </div>
                 </div>

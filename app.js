@@ -727,90 +727,95 @@ function resetStats() {
 // ==========================================================================
 
 function updateExplorer() {
-    const sortedTreble = [...NOTES.treble].sort((a, b) => a.step - b.step);
-    const sortedBass = [...NOTES.bass].sort((a, b) => a.step - b.step);
+    let clef = state.settings.clef;
+    if (clef === 'both') {
+        clef = 'treble'; // 両方ランダムのときはト音記号をデフォルトにする
+    }
+    
+    const badge = document.getElementById('explorer-clef-badge');
+    if (badge) {
+        badge.innerText = clef === 'treble' ? 'ト音記号 (𝄞)' : 'ヘ音記号 (𝄢)';
+    }
 
-    const renderClefExplorer = (clef, notes, containerId) => {
-        const wrapper = document.getElementById(containerId);
-        if (!wrapper) return;
+    const notes = clef === 'treble' ? NOTES.treble : NOTES.bass;
+    const sortedNotes = [...notes].sort((a, b) => a.step - b.step);
 
-        const staffLinesY = [50, 70, 90, 110, 130];
-        
-        let svgHtml = `
-            <svg viewBox="0 0 860 190" xmlns="http://www.w3.org/2000/svg">
-                <!-- 五線譜 (5 staff lines) -->
-        `;
+    const wrapper = document.getElementById('explorer-canvas-wrapper');
+    if (!wrapper) return;
 
-        staffLinesY.forEach(y => {
-            svgHtml += `<line class="staff-line" x1="20" y1="${y}" x2="840" y2="${y}" stroke="rgba(255,255,255,0.15)" stroke-width="1.5" />`;
-        });
+    const staffLinesY = [50, 70, 90, 110, 130];
+    
+    let svgHtml = `
+        <svg viewBox="0 0 860 190" xmlns="http://www.w3.org/2000/svg">
+            <!-- 五線譜 (5 staff lines) -->
+    `;
 
-        // 音部記号 (Noto Music フォントを使用)
-        if (clef === 'treble') {
-            svgHtml += `<text x="25" y="130" font-family="'Noto Music', 'Segoe UI Symbol', sans-serif" font-size="95" fill="var(--text-primary)" style="opacity: 0.8; user-select: none;">𝄞</text>`;
-        } else {
-            svgHtml += `<text x="25" y="96" font-family="'Noto Music', 'Segoe UI Symbol', sans-serif" font-size="75" fill="var(--text-primary)" style="opacity: 0.8; user-select: none;">𝄢</text>`;
+    staffLinesY.forEach(y => {
+        svgHtml += `<line class="staff-line" x1="20" y1="${y}" x2="840" y2="${y}" stroke="rgba(255,255,255,0.15)" stroke-width="1.5" />`;
+    });
+
+    // 音部記号 (Noto Music フォントを使用)
+    if (clef === 'treble') {
+        svgHtml += `<text x="25" y="130" font-family="'Noto Music', 'Segoe UI Symbol', sans-serif" font-size="95" fill="var(--text-primary)" style="opacity: 0.8; user-select: none;">𝄞</text>`;
+    } else {
+        svgHtml += `<text x="25" y="96" font-family="'Noto Music', 'Segoe UI Symbol', sans-serif" font-size="75" fill="var(--text-primary)" style="opacity: 0.8; user-select: none;">𝄢</text>`;
+    }
+
+    // 各音符の描画
+    sortedNotes.forEach((note, idx) => {
+        const x = 85 + idx * 44;
+        const y = 130 - (note.step * 10);
+        const isC = note.syllable === "ド";
+
+        // 加線 (Ledger lines)
+        if (y <= 30) {
+            for (let ly = 30; ly >= y; ly -= 20) {
+                svgHtml += `<line class="ledger-line" x1="${x - 18}" y1="${ly}" x2="${x + 18}" y2="${ly}" stroke="rgba(255,255,255,0.4)" stroke-width="2" />`;
+            }
+        } else if (y >= 150) {
+            for (let ly = 150; ly <= y; ly += 20) {
+                svgHtml += `<line class="ledger-line" x1="${x - 18}" y1="${ly}" x2="${x + 18}" y2="${ly}" stroke="rgba(255,255,255,0.4)" stroke-width="2" />`;
+            }
         }
 
-        // 各音符の描画
-        notes.forEach((note, idx) => {
-            const x = 85 + idx * 44;
-            const y = 130 - (note.step * 10);
-            const isC = note.syllable === "ド";
+        // 音名表記の選択
+        let label = "";
+        if (state.settings.notation === 'syllable') label = note.syllable;
+        else if (state.settings.notation === 'letter') label = note.letter;
+        else label = note.japanese;
 
-            // 加線 (Ledger lines)
-            if (y <= 30) {
-                for (let ly = 30; ly >= y; ly -= 20) {
-                    svgHtml += `<line class="ledger-line" x1="${x - 18}" y1="${ly}" x2="${x + 18}" y2="${ly}" stroke="rgba(255,255,255,0.4)" stroke-width="2" />`;
-                }
-            } else if (y >= 150) {
-                for (let ly = 150; ly <= y; ly += 20) {
-                    svgHtml += `<line class="ledger-line" x1="${x - 18}" y1="${ly}" x2="${x + 18}" y2="${ly}" stroke="rgba(255,255,255,0.4)" stroke-width="2" />`;
-                }
-            }
+        const noteClass = isC ? "explorer-notehead is-c" : "explorer-notehead";
+        const textClass = isC ? "explorer-notename is-c" : "explorer-notename";
 
-            // 音名表記の選択
-            let label = "";
-            if (state.settings.notation === 'syllable') label = note.syllable;
-            else if (state.settings.notation === 'letter') label = note.letter;
-            else label = note.japanese;
+        svgHtml += `
+            <g class="explorer-note-group" data-freq="${note.freq}">
+                <!-- 音符ヘッド -->
+                <ellipse cx="${x}" cy="${y}" rx="13" ry="9" transform="rotate(-20, ${x}, ${y})" class="${noteClass}" style="transition: fill 0.2s, filter 0.2s;" />
+                <!-- 中空部分 -->
+                <ellipse cx="${x}" cy="${y}" rx="5.5" ry="3" transform="rotate(-20, ${x}, ${y})" fill="#0f172a" />
+                <!-- 音名ラベル -->
+                <text x="${x}" y="168" text-anchor="middle" class="${textClass}">${label}</text>
+            </g>
+        `;
+    });
 
-            const noteClass = isC ? "explorer-notehead is-c" : "explorer-notehead";
-            const textClass = isC ? "explorer-notename is-c" : "explorer-notename";
+    svgHtml += `</svg>`;
+    wrapper.innerHTML = svgHtml;
 
-            svgHtml += `
-                <g class="explorer-note-group" data-freq="${note.freq}">
-                    <!-- 音符ヘッド -->
-                    <ellipse cx="${x}" cy="${y}" rx="13" ry="9" transform="rotate(-20, ${x}, ${y})" class="${noteClass}" style="transition: transform 0.15s ease-out, fill 0.2s, filter 0.2s;" />
-                    <!-- 中空部分 -->
-                    <ellipse cx="${x}" cy="${y}" rx="5.5" ry="3" transform="rotate(-20, ${x}, ${y})" fill="#0f172a" />
-                    <!-- 音名ラベル -->
-                    <text x="${x}" y="168" text-anchor="middle" class="${textClass}">${label}</text>
-                </g>
-            `;
+    // 音をクリックした時の再生処理イベントバインド
+    wrapper.querySelectorAll('.explorer-note-group').forEach(group => {
+        const freq = parseFloat(group.getAttribute('data-freq'));
+        group.addEventListener('click', () => {
+            synth.playNote(freq);
+            
+            // クリック時の一時的な発光アニメーション (CSSのtransform競合を避けて安全に表示)
+            const head = group.querySelector('.explorer-notehead');
+            head.style.filter = 'brightness(1.5) drop-shadow(0 0 10px white)';
+            setTimeout(() => {
+                head.style.filter = '';
+            }, 150);
         });
-
-        svgHtml += `</svg>`;
-        wrapper.innerHTML = svgHtml;
-
-        // 音をクリックした時の再生処理イベントバインド
-        wrapper.querySelectorAll('.explorer-note-group').forEach(group => {
-            const freq = parseFloat(group.getAttribute('data-freq'));
-            group.addEventListener('click', () => {
-                synth.playNote(freq);
-                
-                // クリック時の一時的なスケールアニメーション
-                const head = group.querySelector('.explorer-notehead');
-                head.style.transform = 'scale(1.25) rotate(-20deg)';
-                setTimeout(() => {
-                    head.style.transform = '';
-                }, 150);
-            });
-        });
-    };
-
-    renderClefExplorer('treble', sortedTreble, 'explorer-treble-wrapper');
-    renderClefExplorer('bass', sortedBass, 'explorer-bass-wrapper');
+    });
 }
 
 // ==========================================================================
