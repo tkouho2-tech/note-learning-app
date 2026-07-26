@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NoteMaster - 音符学習アプリ</title>
+    <!-- Google Fonts: Outfit, Noto Sans JP, Noto Music -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+JP:wght@300;400;700&family=Noto+Music&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=1.1">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 背景のデコレーション用グラデーション球体 -->
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+
+        <header>
+            <div class="logo">
+                <span class="logo-icon">𝄞</span>
+                <span class="logo-text">NoteMaster</span>
+            </div>
+            <div class="header-actions">
+                <button id="btn-show-stats" class="icon-button" title="統計データ">
+                    <svg viewBox="0 0 24 24" width="24" height="24">
+                        <path fill="currentColor" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-1 16H6c-.55 0-1-.45-1-1V6c0-.55.45-1 1-1h12c.55 0 1 .45 1 1v12c0 .55-.45 1-1 1zm-8-3h2v-4h-2v4zm-4 0h2v-7H6v7zm8 0h2v-9h-2v9z"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <main>
+            <!-- 1. スタート画面 -->
+            <section id="screen-start" class="screen active">
+                <div class="hero">
+                    <h1>楽しく音符をマスターしよう</h1>
+                    <p class="subtitle">ト音記号とヘ音記号の読譜をゲーム感覚でトレーニング</p>
+                </div>
+
+                <div class="glass-card config-panel">
+                    <h2>クイズ設定</h2>
+                    
+                    <div class="config-group">
+                        <label>対象の音部記号</label>
+                        <div class="toggle-buttons" id="clef-selector">
+                            <button class="toggle-btn active" data-clef="treble">ト音記号 (𝄞)</button>
+                            <button class="toggle-btn" data-clef="bass">ヘ音記号 (𝄢)</button>
+                            <button class="toggle-btn" data-clef="both">両方ランダム</button>
+                        </div>
+                    </div>
+
+                    <div class="config-group">
+                        <label>難易度</label>
+                        <div class="toggle-buttons" id="difficulty-selector">
+                            <button class="toggle-btn active" data-diff="easy">初級 <span class="desc">五線譜内</span></button>
+                            <button class="toggle-btn" data-diff="medium">中級 <span class="desc">加線1〜2本</span></button>
+                            <button class="toggle-btn" data-diff="hard">上級 <span class="desc">加線3本以上</span></button>
+                        </div>
+                    </div>
+
+                    <div class="config-group">
+                        <label>音名表記</label>
+                        <div class="toggle-buttons" id="notation-selector">
+                            <button class="toggle-btn active" data-notation="syllable">ドレミ</button>
+                            <button class="toggle-btn" data-notation="letter">CDE</button>
+                            <button class="toggle-btn" data-notation="japanese">ハニホ</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 音符と音の事前確認パネル (音符図鑑) -->
+                <div class="glass-card explorer-panel">
+                    <div class="explorer-header">
+                        <h2>音符と音の確認 (音符図鑑)</h2>
+                        <span id="explorer-clef-badge" class="badge">ト音記号</span>
+                    </div>
+                    <p class="explorer-desc">下のボタンを押すと、五線譜上の位置とピアノの音を確認できます。</p>
+                    <div id="explorer-canvas-wrapper" class="sheet-music-container mini-sheet">
+                        <!-- ここに動的SVGが生成される -->
+                    </div>
+                    <div class="explorer-buttons-area">
+                        <div id="explorer-buttons" class="answer-grid explorer-grid">
+                            <!-- JSで音符ボタンが動的に生成される -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="menu-actions">
+                    <button id="btn-start-practice" class="primary-btn btn-glow">
+                        <span class="btn-content">
+                            <span class="icon">📖</span>
+                            練習モードを開始
+                        </span>
+                        <span class="btn-sub">制限時間なし・解説付き</span>
+                    </button>
+                    <button id="btn-start-challenge" class="secondary-btn">
+                        <span class="btn-content">
+                            <span class="icon">⚡</span>
+                            チャレンジモード
+                        </span>
+                        <span class="btn-sub">60秒タイムアタック</span>
+                    </button>
+                </div>
+
+                <div class="best-score-badge" id="best-score-display">
+                    🏆 ハイスコア: <span id="best-score-val">0</span>
+                </div>
+            </section>
+
+            <!-- 2. ゲーム画面 -->
+            <section id="screen-game" class="screen">
+                <div class="game-header">
+                    <!-- 練習モード用進捗 -->
+                    <div id="practice-status" class="status-indicator">
+                        <span class="badge">練習</span>
+                        <span>問題: <span id="practice-count">1</span></span>
+                    </div>
+                    <!-- チャレンジモード用進捗 -->
+                    <div id="challenge-status" class="status-indicator hidden">
+                        <div class="stat-item">
+                            <span class="label">TIME</span>
+                            <span class="value timer" id="game-timer">60</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="label">SCORE</span>
+                            <span class="value" id="game-score">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="label">COMBO</span>
+                            <span class="value combo-val" id="game-combo">0</span>
+                        </div>
+                    </div>
+                    <button id="btn-quit-game" class="text-button">中断する</button>
+                </div>
+
+                <!-- タイムアタック用プログレスバー -->
+                <div class="progress-bar-container hidden" id="timer-bar-container">
+                    <div class="progress-bar" id="timer-bar"></div>
+                </div>
+
+                <!-- 楽譜表示エリア -->
+                <div class="sheet-music-container glass-card">
+                    <div class="sheet-music-header">
+                        <span id="clef-indicator-badge" class="badge">ト音記号</span>
+                    </div>
+                    <div id="canvas-wrapper">
+                        <!-- ここに動的SVGが生成される -->
+                    </div>
+                    <!-- 正解・不正解のエフェクト表示領域 -->
+                    <div id="feedback-overlay" class="feedback-overlay">
+                        <div class="feedback-icon" id="feedback-icon"></div>
+                    </div>
+                </div>
+
+                <!-- ヒント表示（練習モードのみ） -->
+                <div id="practice-hint" class="practice-hint-panel">
+                    <p id="hint-text">音符の線を数えてみましょう！</p>
+                </div>
+
+                <!-- 回答ボタン群 -->
+                <div class="answer-section">
+                    <p class="section-title">この音符は何の音？</p>
+                    <div class="answer-grid" id="answer-buttons">
+                        <!-- JSで動的に音名ボタンが生成される -->
+                    </div>
+                </div>
+
+                <!-- アクションエリア（練習モード用「次へ」など） -->
+                <div class="game-actions">
+                    <button id="btn-next-question" class="primary-btn hidden">
+                        次へ進む ➜
+                    </button>
+                </div>
+            </section>
+
+            <!-- 3. 結果画面 -->
+            <section id="screen-result" class="screen">
+                <div class="glass-card result-card">
+                    <div class="result-emoji" id="result-emoji">🎉</div>
+                    <h2 id="result-title">チャレンジ終了！</h2>
+                    
+                    <div class="score-display-large">
+                        <span class="score-val" id="result-score">0</span>
+                        <span class="score-label">POINTS</span>
+                    </div>
+
+                    <div class="result-stats">
+                        <div class="stat-row">
+                            <span>正解数</span>
+                            <span class="stat-val font-accent" id="result-correct">0</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>不正解数</span>
+                            <span class="stat-val" id="result-incorrect">0</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>正解率</span>
+                            <span class="stat-val font-accent" id="result-accuracy">0%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>最大コンボ</span>
+                            <span class="stat-val" id="result-max-combo">0</span>
+                        </div>
+                    </div>
+
+                    <div class="new-record-badge hidden" id="new-record-badge">
+                        ✨ NEW RECORD ✨
+                    </div>
+
+                    <div class="result-actions">
+                        <button id="btn-retry" class="primary-btn btn-glow">もう一度挑戦</button>
+                        <button id="btn-home" class="secondary-btn">タイトルへ戻る</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. 統計・進捗画面 -->
+            <section id="screen-stats" class="screen">
+                <div class="glass-card stats-card">
+                    <div class="stats-header">
+                        <h2>学習統計データ</h2>
+                        <button id="btn-close-stats" class="close-btn">&times;</button>
+                    </div>
+
+                    <div class="stats-summary">
+                        <div class="summary-item">
+                            <span class="summary-val" id="total-answers">0</span>
+                            <span class="summary-label">解答総数</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-val font-accent" id="total-accuracy">0%</span>
+                            <span class="summary-label">総合正解率</span>
+                        </div>
+                    </div>
+
+                    <!-- 苦手な音のランキング -->
+                    <div class="stats-section">
+                        <h3>苦手な音（間違えやすい音）</h3>
+                        <div class="weak-notes-list" id="weak-notes-list">
+                            <!-- JSで生成 -->
+                            <p class="empty-msg">まだ十分なデータがありません。クイズをプレイしましょう！</p>
+                        </div>
+                    </div>
+
+                    <!-- 音符別の詳細正解率グラフ（CSS進捗バーで表現） -->
+                    <div class="stats-section">
+                        <h3>音高別の正解率</h3>
+                        <div class="note-progress-container" id="note-progress-list">
+                            <!-- JSで生成 -->
+                        </div>
+                    </div>
+
+                    <button id="btn-reset-stats" class="danger-btn">データをリセット</button>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2026 NoteMaster. Made with ❤️ for music learners.</p>
+        </footer>
+    </div>
+
+    <script src="app.js?v=1.1"></script>
+</body>
+</html>
