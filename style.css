@@ -670,7 +670,7 @@ button {
     min-height: 48px;
 }
 
-/* Answers Buttons */
+/* Piano Keyboard Answer UI */
 .answer-section {
     margin-top: 10px;
 }
@@ -685,52 +685,93 @@ button {
     margin-bottom: 12px;
 }
 
-.answer-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
+.piano-keyboard-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
 }
 
-@media(min-width: 480px) {
-    .answer-grid {
-        grid-template-columns: repeat(7, 1fr);
-    }
+.piano-keyboard {
+    display: flex;
+    position: relative;
+    width: 100%;
+    max-width: 480px;
+    height: 120px;
+    background: #0f172a;
+    border-radius: 12px;
+    border: 4px solid #1e293b;
+    overflow: hidden;
+    user-select: none;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
 }
 
-.answer-btn {
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    color: var(--text-primary);
-    padding: 18px 0;
-    font-size: 1.25rem;
-    font-weight: 700;
-    border-radius: 16px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+.piano-key {
+    box-sizing: border-box;
 }
 
-.answer-btn:hover {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.18);
-    transform: translateY(-2px);
+.piano-key.white {
+    flex: 1;
+    height: 100%;
+    background: #f8fafc;
+    border-right: 1px solid #cbd5e1;
+    border-radius: 0 0 4px 4px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    padding-bottom: 10px;
+    cursor: pointer;
+    position: relative;
+    z-index: 1;
+    box-shadow: inset 0 -4px 0 #cbd5e1, 0 2px 4px rgba(0, 0, 0, 0.15);
+    transition: background-color 0.15s ease, transform 0.1s ease, box-shadow 0.1s ease;
 }
 
-.answer-btn:active {
+.piano-key.white:last-child {
+    border-right: none;
+}
+
+.piano-key.white:active {
+    background: #e2e8f0;
     transform: translateY(1px);
+    box-shadow: inset 0 -1px 0 #cbd5e1;
 }
 
-/* Correct/Incorrect button visual feedbacks */
-.answer-btn.correct {
-    background: var(--color-success);
-    border-color: var(--color-success);
-    color: white;
-    box-shadow: 0 0 15px var(--color-success-glow);
+/* Correct / Incorrect piano key states */
+.piano-key.white.correct {
+    background: var(--color-success) !important;
+    color: white !important;
+    box-shadow: inset 0 -4px 0 var(--color-success-glow), 0 0 15px var(--color-success-glow);
 }
 
-.answer-btn.incorrect {
-    background: var(--color-error);
-    border-color: var(--color-error);
-    color: white;
-    box-shadow: 0 0 15px var(--color-error-glow);
+.piano-key.white.incorrect {
+    background: var(--color-error) !important;
+    color: white !important;
+    box-shadow: inset 0 -4px 0 var(--color-error-glow), 0 0 15px var(--color-error-glow);
+}
+
+.piano-key.white.correct .key-label,
+.piano-key.white.incorrect .key-label {
+    color: white !important;
+}
+
+.piano-key.black {
+    position: absolute;
+    height: 60%;
+    background: #1e293b;
+    border-bottom: 4px solid #0f172a;
+    border-radius: 0 0 4px 4px;
+    z-index: 2;
+    pointer-events: none; /* Let clicks pass through to white keys beneath it */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4), inset 0 -2px 0 rgba(0, 0, 0, 0.5);
+}
+
+.key-label {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #475569;
+    pointer-events: none;
+    transition: color 0.15s ease;
 }
 
 .game-actions {
@@ -1379,21 +1420,24 @@ button {
         margin-bottom: 4px;
     }
     
-    .answer-grid {
-        grid-template-columns: repeat(4, 1fr);
-        gap: 5px;
+    .piano-keyboard {
+        height: 90px;
+        border-width: 3px;
+        border-radius: 8px;
     }
     
-    .answer-btn {
-        padding: 8px 0;
-        font-size: 0.95rem;
-        border-radius: 6px;
+    .piano-key.white {
+        padding-bottom: 6px;
+    }
+    
+    .key-label {
+        font-size: 0.8rem;
     }
     
     /* Next question button area takes exact same space as answers on complete */
     .game-actions {
         margin-top: 2px;
-        height: 52px; /* same general height as answer grid rows */
+        height: 90px; /* match the keyboard height on mobile */
         display: flex;
         align-items: center;
         justify-content: center;

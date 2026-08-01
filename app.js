@@ -213,14 +213,14 @@ function renderMusicNote(clef, note, containerId = 'canvas-wrapper') {
     const wrapper = document.getElementById(containerId);
     if (!wrapper) return;
 
-    // Viewbox layout: 320x180
+    // Viewbox layout cropped from 320x180 to 260x150 for zoom effect
     // Staff lines are drawn at Y = 50, 70, 90, 110, 130
     const staffLinesY = [50, 70, 90, 110, 130];
     const noteY = 130 - (note.step * 10);
-    const noteX = 180; // center horizontal
+    const noteX = 175; // center horizontally in zoomed view
 
     let svgHtml = `
-        <svg viewBox="0 0 320 180" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox="35 15 250 150" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
             <!-- 五線譜 (5 staff lines) -->
     `;
 
@@ -232,12 +232,12 @@ function renderMusicNote(clef, note, containerId = 'canvas-wrapper') {
     if (clef === 'treble') {
         // ト音記号 G4 (第2線 Y=110) の位置を基準に調整
         svgHtml += `
-            <text x="30" y="130" font-family="'Noto Music', 'Segoe UI Symbol', sans-serif" font-size="95" class="clef-icon-svg">𝄞</text>
+            <text x="40" y="130" font-family="'Noto Music', 'Segoe UI Symbol', sans-serif" font-size="105" class="clef-icon-svg">𝄞</text>
         `;
     } else {
         // ヘ音記号 F3 (第4線 Y=70) の位置を基準に調整
         svgHtml += `
-            <text x="30" y="96" font-family="'Noto Music', 'Segoe UI Symbol', sans-serif" font-size="75" class="clef-icon-svg">𝄢</text>
+            <text x="40" y="96" font-family="'Noto Music', 'Segoe UI Symbol', sans-serif" font-size="85" class="clef-icon-svg">𝄢</text>
         `;
     }
 
@@ -245,22 +245,21 @@ function renderMusicNote(clef, note, containerId = 'canvas-wrapper') {
     if (noteY <= 30) {
         // 上加線 (Y=30, 10, ...)
         for (let y = 30; y >= noteY; y -= 20) {
-            svgHtml += `<line class="ledger-line" x1="${noteX - 25}" y1="${y}" x2="${noteX + 25}" y2="${y}" />`;
+            svgHtml += `<line class="ledger-line" x1="${noteX - 30}" y1="${y}" x2="${noteX + 30}" y2="${y}" />`;
         }
     } else if (noteY >= 150) {
         // 下加線 (Y=150, 170, ...)
         for (let y = 150; y <= noteY; y += 20) {
-            svgHtml += `<line class="ledger-line" x1="${noteX - 25}" y1="${y}" x2="${noteX + 25}" y2="${y}" />`;
+            svgHtml += `<line class="ledger-line" x1="${noteX - 30}" y1="${y}" x2="${noteX + 30}" y2="${y}" />`;
         }
     }
 
-    // 音符ヘッドの描画 (斜め楕円)
-    // rx=14, ry=9.5. 回転させると本物の全音符に近くなる
+    // 音符ヘッドの描画 (斜め楕円) - 拡大サイズ: rx=17.5, ry=11.5
     svgHtml += `
         <g id="${containerId}-group">
-            <ellipse cx="${noteX}" cy="${noteY}" rx="14" ry="9.5" transform="rotate(-20, ${noteX}, ${noteY})" class="note-head" id="${containerId}-head" />
+            <ellipse cx="${noteX}" cy="${noteY}" rx="17.5" ry="11.5" transform="rotate(-20, ${noteX}, ${noteY})" class="note-head" id="${containerId}-head" />
             <!-- 内側の白い穴を再現して全音符らしく見せる -->
-            <ellipse cx="${noteX}" cy="${noteY}" rx="6" ry="3" transform="rotate(-20, ${noteX}, ${noteY})" fill="#0f172a" id="${containerId}-inner" style="transition: fill var(--transition-fast);" />
+            <ellipse cx="${noteX}" cy="${noteY}" rx="8" ry="4" transform="rotate(-20, ${noteX}, ${noteY})" fill="#0f172a" id="${containerId}-inner" style="transition: fill var(--transition-fast);" />
         </g>
     `;
 
@@ -305,9 +304,10 @@ function showScreen(screenId) {
     }
 }
 
-// Answer Options Buttons Generator
-function generateAnswerButtons() {
-    const container = document.getElementById('answer-buttons');
+// Answer Options Piano Keyboard Generator
+function generatePianoKeyboard() {
+    const container = document.getElementById('piano-keyboard-container');
+    if (!container) return;
     container.innerHTML = '';
 
     const sylls = ["ド", "レ", "ミ", "ファ", "ソ", "ラ", "シ"];
@@ -319,16 +319,39 @@ function generateAnswerButtons() {
     else if (state.settings.notation === 'letter') displayNames = letts;
     else displayNames = japs;
 
+    const keyboard = document.createElement('div');
+    keyboard.className = 'piano-keyboard';
+
+    // Generate 7 white keys (Do, Re, Mi, Fa, Sol, La, Si)
+    const whiteKeys = [];
     displayNames.forEach((name, idx) => {
-        const btn = document.createElement('button');
-        btn.className = 'answer-btn';
-        btn.innerText = name;
-        btn.dataset.noteIndex = idx;
-        btn.dataset.name = name;
+        const key = document.createElement('div');
+        key.className = 'piano-key white';
+        key.dataset.name = name;
+        key.dataset.noteIndex = idx;
         
-        btn.addEventListener('click', () => handleAnswer(name, btn));
-        container.appendChild(btn);
+        const label = document.createElement('span');
+        label.className = 'key-label';
+        label.innerText = name;
+        key.appendChild(label);
+
+        key.addEventListener('click', () => handleAnswer(name, key));
+        keyboard.appendChild(key);
+        whiteKeys.push(key);
     });
+
+    // Generate 5 black keys overlay (C#, D#, F#, G#, A#)
+    const blackKeyPositions = [1, 2, 4, 5, 6]; // indices of white keys to place black key on their left
+    blackKeyPositions.forEach((pos) => {
+        const blackKey = document.createElement('div');
+        blackKey.className = 'piano-key black';
+        // Position relative to white keys (each white key width = 100% / 7)
+        blackKey.style.left = `calc((100% / 7) * ${pos} - (100% / 7 * 0.3))`;
+        blackKey.style.width = `calc(100% / 7 * 0.6)`;
+        keyboard.appendChild(blackKey);
+    });
+
+    container.appendChild(keyboard);
 }
 
 // Get standard note array filtered by difficulty
@@ -356,10 +379,10 @@ function nextQuestion() {
     const answerSection = document.querySelector('.answer-section');
     if (answerSection) answerSection.classList.remove('hidden');
     
-    // Reset buttons
-    document.querySelectorAll('.answer-btn').forEach(btn => {
-        btn.classList.remove('correct', 'incorrect');
-        btn.disabled = false;
+    // Reset piano keys
+    document.querySelectorAll('.piano-key.white').forEach(key => {
+        key.classList.remove('correct', 'incorrect');
+        key.style.pointerEvents = 'auto'; // Re-enable clicks
     });
 
     // Reset SVG colors
@@ -417,9 +440,9 @@ function handleAnswer(selectedName, clickedBtn) {
 
     const isCorrect = (selectedName === correctAnswer);
 
-    // Disable all options
-    document.querySelectorAll('.answer-btn').forEach(btn => {
-        btn.disabled = true;
+    // Disable all piano keys to prevent multi-taps
+    document.querySelectorAll('.piano-key.white').forEach(key => {
+        key.style.pointerEvents = 'none';
     });
 
     // Update stats dictionary
@@ -478,10 +501,10 @@ function handleAnswer(selectedName, clickedBtn) {
         clickedBtn.classList.add('incorrect');
         synth.playIncorrect();
 
-        // Highlight correct button
-        document.querySelectorAll('.answer-btn').forEach(btn => {
-            if (btn.dataset.name === correctAnswer) {
-                btn.classList.add('correct');
+        // Highlight correct piano key
+        document.querySelectorAll('.piano-key.white').forEach(key => {
+            if (key.dataset.name === correctAnswer) {
+                key.classList.add('correct');
             }
         });
 
@@ -534,7 +557,7 @@ function startPracticeMode() {
     document.getElementById('timer-bar-container').classList.add('hidden');
     document.getElementById('practice-count').innerText = state.game.questionCount;
 
-    generateAnswerButtons();
+    generatePianoKeyboard();
     showScreen('game');
     nextQuestion();
 }
@@ -558,7 +581,7 @@ function startChallengeMode() {
     document.getElementById('game-timer').innerText = '60';
     document.getElementById('timer-bar').style.width = '100%';
 
-    generateAnswerButtons();
+    generatePianoKeyboard();
     showScreen('game');
     nextQuestion();
 
@@ -879,9 +902,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 btn.classList.add('active');
                 state.settings[settingKey] = btn.dataset[settingKey];
                 
-                // Regenerate buttons if changing notations
+                // Regenerate keyboard if changing notations
                 if (settingKey === 'notation') {
-                    generateAnswerButtons();
+                    generatePianoKeyboard();
                 }
                 
                 // Refresh note explorer panel
