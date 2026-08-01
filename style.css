@@ -1233,20 +1233,44 @@ button {
         overflow: hidden;
     }
     
-    /* Hide Hero text on mobile to save critical vertical space */
+    .screen.active {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        justify-content: space-around;
+        align-items: stretch;
+    }
+    
+    /* Show compact Hero text on mobile to balance space */
     .hero {
-        display: none;
+        display: block;
+        margin-bottom: 4px;
+        margin-top: 4px;
+        text-align: center;
+    }
+    
+    .hero h1 {
+        font-size: 1.25rem;
+        margin-bottom: 2px;
+        background: linear-gradient(135deg, #ffffff 30%, var(--color-primary) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    
+    .hero .subtitle {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
     }
     
     .glass-card {
         padding: 10px;
-        margin-bottom: 10px;
+        margin-bottom: 0; /* Rely on space-around for spacing */
         border-radius: 12px;
     }
     
     .config-panel h2 {
-        font-size: 0.95rem;
-        margin-bottom: 8px;
+        font-size: 0.9rem;
+        margin-bottom: 6px;
         text-align: center;
     }
     
@@ -1276,7 +1300,7 @@ button {
     }
     
     .explorer-trigger-container {
-        margin-bottom: 10px;
+        margin-bottom: 0;
     }
     
     .explorer-trigger-btn {
@@ -1308,7 +1332,7 @@ button {
     
     .menu-actions {
         gap: 6px;
-        margin-bottom: 8px;
+        margin-bottom: 0;
     }
     
     .primary-btn, .secondary-btn {
@@ -1325,7 +1349,7 @@ button {
         padding: 6px;
         font-size: 0.85rem;
         border-radius: 8px;
-        margin-bottom: 4px;
+        margin-bottom: 0;
     }
     
     /* Game Screen Mobile Adjustments */
