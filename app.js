@@ -352,6 +352,10 @@ function nextQuestion() {
     document.getElementById('btn-next-question').classList.add('hidden');
     document.getElementById('practice-hint').classList.remove('hidden');
     
+    // Show answer buttons again
+    const answerSection = document.querySelector('.answer-section');
+    if (answerSection) answerSection.classList.remove('hidden');
+    
     // Reset buttons
     document.querySelectorAll('.answer-btn').forEach(btn => {
         btn.classList.remove('correct', 'incorrect');
@@ -465,6 +469,8 @@ function handleAnswer(selectedName, clickedBtn) {
             }, 600);
         } else {
             // Practice Mode: show "Next" button
+            const answerSection = document.querySelector('.answer-section');
+            if (answerSection) answerSection.classList.add('hidden');
             document.getElementById('btn-next-question').classList.remove('hidden');
             document.getElementById('hint-text').innerText = "正解です！ 🎹音が鳴りました。";
         }
@@ -497,6 +503,8 @@ function handleAnswer(selectedName, clickedBtn) {
             }, 800);
         } else {
             // Practice mode: Show detailed hint
+            const answerSection = document.querySelector('.answer-section');
+            if (answerSection) answerSection.classList.add('hidden');
             document.getElementById('btn-next-question').classList.remove('hidden');
             document.getElementById('hint-text').innerText = `正解は「${correctAnswer}」でした。 ${note.hint}`;
         }
@@ -858,34 +866,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const btnClefTreble = document.getElementById('btn-explorer-clef-treble');
             if (btnClefTreble) btnClefTreble.classList.remove('active');
             updateExplorer();
-        });
-    }
-
-    // 2.7. Accordion Toggle for Note Explorer
-    const btnToggleExplorer = document.getElementById('btn-toggle-explorer');
-    const explorerContent = document.getElementById('explorer-content');
-    if (btnToggleExplorer && explorerContent) {
-        btnToggleExplorer.addEventListener('click', () => {
-            const isCollapsed = explorerContent.classList.contains('collapsed');
-            if (isCollapsed) {
-                explorerContent.classList.remove('collapsed');
-                btnToggleExplorer.setAttribute('aria-expanded', 'true');
-                btnToggleExplorer.classList.add('active');
-                // Render and update SVG when expanded to ensure correct dimensions
-                updateExplorer();
-            } else {
-                explorerContent.classList.add('collapsed');
-                btnToggleExplorer.setAttribute('aria-expanded', 'false');
-                btnToggleExplorer.classList.remove('active');
-            }
-        });
-        
-        // Also support keyboard Enter key for accessibility
-        btnToggleExplorer.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                btnToggleExplorer.click();
-            }
         });
     }
 
