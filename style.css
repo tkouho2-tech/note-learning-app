@@ -1201,7 +1201,7 @@ button {
 /* ==========================================================================
    Responsive Optimizations for Mobile (1-Screen Operation)
    ========================================================================== */
-@media (max-width: 480px) {
+@media (max-width: 768px) {
     body {
         line-height: 1.3;
     }
