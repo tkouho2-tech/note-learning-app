@@ -213,31 +213,29 @@ function renderMusicNote(clef, note, containerId = 'canvas-wrapper') {
     const wrapper = document.getElementById(containerId);
     if (!wrapper) return;
 
-    // Viewbox layout cropped from 320x180 to 260x150 for zoom effect
+    // Viewbox layout cropped to 185x160 for extreme zoom effect
     // Staff lines are drawn at Y = 50, 70, 90, 110, 130
     const staffLinesY = [50, 70, 90, 110, 130];
     const noteY = 130 - (note.step * 10);
-    const noteX = 175; // center horizontally in zoomed view
+    const noteX = 135; // centered in the narrow viewBox
 
     let svgHtml = `
-        <svg viewBox="35 15 250 150" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox="30 10 185 160" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
             <!-- 五線譜 (5 staff lines) -->
     `;
 
     staffLinesY.forEach(y => {
-        svgHtml += `<line class="staff-line" x1="20" y1="${y}" x2="300" y2="${y}" />`;
+        svgHtml += `<line class="staff-line" x1="20" y1="${y}" x2="210" y2="${y}" />`;
     });
 
     // 音部記号の描画 (Noto Music フォントを使用)
     if (clef === 'treble') {
-        // ト音記号 G4 (第2線 Y=110) の位置を基準に調整
         svgHtml += `
-            <text x="40" y="130" font-family="'Noto Music', 'Segoe UI Symbol', sans-serif" font-size="105" class="clef-icon-svg">𝄞</text>
+            <text x="30" y="130" font-family="'Noto Music', 'Segoe UI Symbol', sans-serif" font-size="115" class="clef-icon-svg">𝄞</text>
         `;
     } else {
-        // ヘ音記号 F3 (第4線 Y=70) の位置を基準に調整
         svgHtml += `
-            <text x="40" y="96" font-family="'Noto Music', 'Segoe UI Symbol', sans-serif" font-size="85" class="clef-icon-svg">𝄢</text>
+            <text x="30" y="96" font-family="'Noto Music', 'Segoe UI Symbol', sans-serif" font-size="95" class="clef-icon-svg">𝄢</text>
         `;
     }
 
@@ -245,21 +243,21 @@ function renderMusicNote(clef, note, containerId = 'canvas-wrapper') {
     if (noteY <= 30) {
         // 上加線 (Y=30, 10, ...)
         for (let y = 30; y >= noteY; y -= 20) {
-            svgHtml += `<line class="ledger-line" x1="${noteX - 30}" y1="${y}" x2="${noteX + 30}" y2="${y}" />`;
+            svgHtml += `<line class="ledger-line" x1="${noteX - 32}" y1="${y}" x2="${noteX + 32}" y2="${y}" />`;
         }
     } else if (noteY >= 150) {
         // 下加線 (Y=150, 170, ...)
         for (let y = 150; y <= noteY; y += 20) {
-            svgHtml += `<line class="ledger-line" x1="${noteX - 30}" y1="${y}" x2="${noteX + 30}" y2="${y}" />`;
+            svgHtml += `<line class="ledger-line" x1="${noteX - 32}" y1="${y}" x2="${noteX + 32}" y2="${y}" />`;
         }
     }
 
-    // 音符ヘッドの描画 (斜め楕円) - 拡大サイズ: rx=17.5, ry=11.5
+    // 音符ヘッドの描画 (斜め楕円) - 拡大サイズ: rx=21.5, ry=14
     svgHtml += `
         <g id="${containerId}-group">
-            <ellipse cx="${noteX}" cy="${noteY}" rx="17.5" ry="11.5" transform="rotate(-20, ${noteX}, ${noteY})" class="note-head" id="${containerId}-head" />
+            <ellipse cx="${noteX}" cy="${noteY}" rx="21.5" ry="14" transform="rotate(-20, ${noteX}, ${noteY})" class="note-head" id="${containerId}-head" />
             <!-- 内側の白い穴を再現して全音符らしく見せる -->
-            <ellipse cx="${noteX}" cy="${noteY}" rx="8" ry="4" transform="rotate(-20, ${noteX}, ${noteY})" fill="#0f172a" id="${containerId}-inner" style="transition: fill var(--transition-fast);" />
+            <ellipse cx="${noteX}" cy="${noteY}" rx="10" ry="5" transform="rotate(-20, ${noteX}, ${noteY})" fill="#0f172a" id="${containerId}-inner" style="transition: fill var(--transition-fast);" />
         </g>
     `;
 
