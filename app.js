@@ -727,15 +727,10 @@ function resetStats() {
 // ==========================================================================
 
 function updateExplorer() {
-    let clef = state.settings.clef;
-    if (clef === 'both') {
-        clef = 'treble'; // 両方ランダムのときはト音記号をデフォルトにする
+    if (!state.explorerClef) {
+        state.explorerClef = 'treble';
     }
-    
-    const badge = document.getElementById('explorer-clef-badge');
-    if (badge) {
-        badge.innerText = clef === 'treble' ? 'ト音記号 (𝄞)' : 'ヘ音記号 (𝄢)';
-    }
+    const clef = state.explorerClef;
 
     const notes = clef === 'treble' ? NOTES.treble : NOTES.bass;
     const sortedNotes = [...notes].sort((a, b) => a.step - b.step);
@@ -788,9 +783,9 @@ function updateExplorer() {
         const textClass = isC ? "explorer-notename is-c" : "explorer-notename";
 
         svgHtml += `
-            <g class="explorer-note-group" data-freq="${note.freq}">
+            <g class="explorer-note-group">
                 <!-- 音符ヘッド -->
-                <ellipse cx="${x}" cy="${y}" rx="13" ry="9" transform="rotate(-20, ${x}, ${y})" class="${noteClass}" style="transition: fill 0.2s, filter 0.2s;" />
+                <ellipse cx="${x}" cy="${y}" rx="13" ry="9" transform="rotate(-20, ${x}, ${y})" class="${noteClass}" />
                 <!-- 中空部分 -->
                 <ellipse cx="${x}" cy="${y}" rx="5.5" ry="3" transform="rotate(-20, ${x}, ${y})" fill="#0f172a" />
                 <!-- 音名ラベル -->
@@ -801,21 +796,6 @@ function updateExplorer() {
 
     svgHtml += `</svg>`;
     wrapper.innerHTML = svgHtml;
-
-    // 音をクリックした時の再生処理イベントバインド
-    wrapper.querySelectorAll('.explorer-note-group').forEach(group => {
-        const freq = parseFloat(group.getAttribute('data-freq'));
-        group.addEventListener('click', () => {
-            synth.playNote(freq);
-            
-            // クリック時の一時的な発光アニメーション (CSSのtransform競合を避けて安全に表示)
-            const head = group.querySelector('.explorer-notehead');
-            head.style.filter = 'brightness(1.5) drop-shadow(0 0 10px white)';
-            setTimeout(() => {
-                head.style.filter = '';
-            }, 150);
-        });
-    });
 }
 
 // ==========================================================================
@@ -826,21 +806,93 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. Load data
     loadStats();
     
-    // 1.5. Initialize Explorer panel
-    updateExplorer();
-
     // 2. Setup screen transitions
-    document.getElementById('btn-show-stats').addEventListener('click', () => {
-        buildStatsScreen();
-        showScreen('stats');
-    });
-    document.getElementById('btn-close-stats').addEventListener('click', () => {
-        showScreen('start');
-    });
+    const btnShowStats = document.getElementById('btn-show-stats');
+    if (btnShowStats) {
+        btnShowStats.addEventListener('click', () => {
+            buildStatsScreen();
+            showScreen('stats');
+        });
+    }
+    const btnCloseStats = document.getElementById('btn-close-stats');
+    if (btnCloseStats) {
+        btnCloseStats.addEventListener('click', () => {
+            showScreen('start');
+        });
+    }
+
+    // 2.5. Note Explorer Transition & Togglers (Protected if elements exist)
+    const btnShowExplorer = document.getElementById('btn-show-explorer');
+    if (btnShowExplorer) {
+        btnShowExplorer.addEventListener('click', () => {
+            state.explorerClef = 'treble';
+            const btnClefTreble = document.getElementById('btn-explorer-clef-treble');
+            const btnClefBass = document.getElementById('btn-explorer-clef-bass');
+            if (btnClefTreble) btnClefTreble.classList.add('active');
+            if (btnClefBass) btnClefBass.classList.remove('active');
+            updateExplorer();
+            showScreen('explorer');
+        });
+    }
+    const btnExplorerBack = document.getElementById('btn-explorer-back');
+    if (btnExplorerBack) {
+        btnExplorerBack.addEventListener('click', () => {
+            showScreen('start');
+        });
+    }
+    const btnExplorerClefTreble = document.getElementById('btn-explorer-clef-treble');
+    if (btnExplorerClefTreble) {
+        btnExplorerClefTreble.addEventListener('click', () => {
+            state.explorerClef = 'treble';
+            btnExplorerClefTreble.classList.add('active');
+            const btnClefBass = document.getElementById('btn-explorer-clef-bass');
+            if (btnClefBass) btnClefBass.classList.remove('active');
+            updateExplorer();
+        });
+    }
+    const btnExplorerClefBass = document.getElementById('btn-explorer-clef-bass');
+    if (btnExplorerClefBass) {
+        btnExplorerClefBass.addEventListener('click', () => {
+            state.explorerClef = 'bass';
+            btnExplorerClefBass.classList.add('active');
+            const btnClefTreble = document.getElementById('btn-explorer-clef-treble');
+            if (btnClefTreble) btnClefTreble.classList.remove('active');
+            updateExplorer();
+        });
+    }
+
+    // 2.7. Accordion Toggle for Note Explorer
+    const btnToggleExplorer = document.getElementById('btn-toggle-explorer');
+    const explorerContent = document.getElementById('explorer-content');
+    if (btnToggleExplorer && explorerContent) {
+        btnToggleExplorer.addEventListener('click', () => {
+            const isCollapsed = explorerContent.classList.contains('collapsed');
+            if (isCollapsed) {
+                explorerContent.classList.remove('collapsed');
+                btnToggleExplorer.setAttribute('aria-expanded', 'true');
+                btnToggleExplorer.classList.add('active');
+                // Render and update SVG when expanded to ensure correct dimensions
+                updateExplorer();
+            } else {
+                explorerContent.classList.add('collapsed');
+                btnToggleExplorer.setAttribute('aria-expanded', 'false');
+                btnToggleExplorer.classList.remove('active');
+            }
+        });
+        
+        // Also support keyboard Enter key for accessibility
+        btnToggleExplorer.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                btnToggleExplorer.click();
+            }
+        });
+    }
 
     // 3. Configurations selectors
     const setupToggleSelectors = (containerId, settingKey) => {
         const container = document.getElementById(containerId);
+        if (!container) return;
         container.querySelectorAll('.toggle-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 container.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
@@ -863,55 +915,81 @@ document.addEventListener('DOMContentLoaded', () => {
     setupToggleSelectors('notation-selector', 'notation');
 
     // 4. Game Modes Buttons
-    document.getElementById('btn-start-practice').addEventListener('click', () => {
-        startPracticeMode();
-    });
+    const btnStartPractice = document.getElementById('btn-start-practice');
+    if (btnStartPractice) {
+        btnStartPractice.addEventListener('click', () => {
+            startPracticeMode();
+        });
+    }
 
-    document.getElementById('btn-start-challenge').addEventListener('click', () => {
-        startChallengeMode();
-    });
+    const btnStartChallenge = document.getElementById('btn-start-challenge');
+    if (btnStartChallenge) {
+        btnStartChallenge.addEventListener('click', () => {
+            startChallengeMode();
+        });
+    }
 
     // 5. In-Game button handlers
-    document.getElementById('btn-quit-game').addEventListener('click', () => {
-        if (state.game.mode === 'challenge') {
-            if (confirm("本当に中断しますか？現在のスコアは無効になります。")) {
-                clearInterval(state.game.timerInterval);
-                state.game.timerInterval = null;
+    const btnQuitGame = document.getElementById('btn-quit-game');
+    if (btnQuitGame) {
+        btnQuitGame.addEventListener('click', () => {
+            if (state.game.mode === 'challenge') {
+                if (confirm("本当に中断しますか？現在のスコアは無効になります。")) {
+                    clearInterval(state.game.timerInterval);
+                    state.game.timerInterval = null;
+                    showScreen('start');
+                    updateExplorer();
+                }
+            } else {
                 showScreen('start');
                 updateExplorer();
             }
-        } else {
-            showScreen('start');
-            updateExplorer();
-        }
-    });
+        });
+    }
 
-    document.getElementById('btn-next-question').addEventListener('click', () => {
-        state.game.questionCount++;
-        document.getElementById('practice-count').innerText = state.game.questionCount;
-        
-        // Hide feedback overlay
-        document.getElementById('feedback-icon').classList.remove('show');
-        
-        nextQuestion();
-    });
+    const btnNextQuestion = document.getElementById('btn-next-question');
+    if (btnNextQuestion) {
+        btnNextQuestion.addEventListener('click', () => {
+            state.game.questionCount++;
+            const practiceCount = document.getElementById('practice-count');
+            if (practiceCount) practiceCount.innerText = state.game.questionCount;
+            
+            // Hide feedback overlay
+            const feedbackIcon = document.getElementById('feedback-icon');
+            if (feedbackIcon) feedbackIcon.classList.remove('show');
+            
+            nextQuestion();
+        });
+    }
 
     // 6. Result Buttons
-    document.getElementById('btn-retry').addEventListener('click', () => {
-        if (state.game.mode === 'challenge') {
-            startChallengeMode();
-        } else {
-            startPracticeMode();
-        }
-    });
+    const btnRetry = document.getElementById('btn-retry');
+    if (btnRetry) {
+        btnRetry.addEventListener('click', () => {
+            if (state.game.mode === 'challenge') {
+                startChallengeMode();
+            } else {
+                startPracticeMode();
+            }
+        });
+    }
 
-    document.getElementById('btn-home').addEventListener('click', () => {
-        showScreen('start');
-        loadStats(); // reload best score
-        updateExplorer(); // refresh explorer panel
-    });
+    const btnHome = document.getElementById('btn-home');
+    if (btnHome) {
+        btnHome.addEventListener('click', () => {
+            showScreen('start');
+            loadStats(); // reload best score
+            updateExplorer(); // refresh explorer panel
+        });
+    }
 
-    document.getElementById('btn-reset-stats').addEventListener('click', () => {
-        resetStats();
-    });
+    const btnResetStats = document.getElementById('btn-reset-stats');
+    if (btnResetStats) {
+        btnResetStats.addEventListener('click', () => {
+            resetStats();
+        });
+    }
+
+    // 7. Initial updates on load
+    updateExplorer();
 });

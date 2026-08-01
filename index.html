@@ -70,17 +70,22 @@
                     </div>
                 </div>
 
-                <!-- 音符と音の事前確認パネル (音符図鑑) -->
-                <div class="glass-card explorer-panel">
-                    <div class="explorer-header">
-                        <h2>音符と音の確認 (音符図鑑)</h2>
-                        <span id="explorer-clef-badge" class="badge">ト音記号</span>
+                <!-- 音符と音の事前確認パネル (音符図鑑 - アコーディオン化) -->
+                <div class="glass-card explorer-panel" id="explorer-panel">
+                    <div class="explorer-header" id="btn-toggle-explorer" role="button" aria-expanded="false" tabindex="0">
+                        <div class="explorer-header-title">
+                            <h2>音符と音の確認 (音符図鑑)</h2>
+                            <span id="explorer-clef-badge" class="badge">ト音記号</span>
+                        </div>
+                        <span class="accordion-icon">▾</span>
                     </div>
-                    <p class="explorer-desc">音符や音名をクリックすると、ピアノの音が鳴ります。ピンク色は「ド」の音です。</p>
-                    
-                    <div class="explorer-scroll-container">
-                        <div id="explorer-canvas-wrapper" class="explorer-canvas-scroll">
-                            <!-- ここに選択された記号の横長SVGが動的に生成される -->
+                    <div class="explorer-content collapsed" id="explorer-content">
+                        <p class="explorer-desc">音符や音名をクリックすると、ピアノの音が鳴ります。ピンク色は「ド」の音です。</p>
+                        
+                        <div class="explorer-scroll-container">
+                            <div id="explorer-canvas-wrapper" class="explorer-canvas-scroll">
+                                <!-- ここに選択された記号の横長SVGが動的に生成される -->
+                            </div>
                         </div>
                     </div>
                 </div>
