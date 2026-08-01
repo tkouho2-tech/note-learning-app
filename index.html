@@ -143,9 +143,12 @@
                     </div>
                 </div>
 
-                <!-- ヒント表示（練習モードのみ） -->
+                <!-- ヒント・アクション表示（練習モードのみ） -->
                 <div id="practice-hint" class="practice-hint-panel">
                     <p id="hint-text">音符の線を数えてみましょう！</p>
+                    <button id="btn-next-question" class="primary-btn next-inline-btn hidden">
+                        次へ進む ➜
+                    </button>
                 </div>
 
                 <!-- 回答ピアノ鍵盤 -->
@@ -154,13 +157,6 @@
                     <div class="piano-keyboard-container" id="piano-keyboard-container">
                         <!-- JSで動的にピアノ鍵盤が生成される -->
                     </div>
-                </div>
-
-                <!-- アクションエリア（練習モード用「次へ」など） -->
-                <div class="game-actions">
-                    <button id="btn-next-question" class="primary-btn hidden">
-                        次へ進む ➜
-                    </button>
                 </div>
             </section>
 

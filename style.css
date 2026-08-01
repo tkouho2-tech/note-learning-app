@@ -744,6 +744,47 @@ button {
     box-shadow: inset 0 -4px 0 var(--color-success-glow), 0 0 15px var(--color-success-glow);
 }
 
+/* Display 'O' marker inside the correct piano key on answer */
+.piano-key.white.correct::after {
+    content: "○";
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2.2rem;
+    color: rgba(255, 255, 255, 0.95);
+    font-weight: 900;
+    pointer-events: none;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Inline next question button inside the hint panel */
+.practice-hint-panel.correct-layout {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    gap: 12px;
+    background: rgba(22, 163, 74, 0.15) !important;
+    border: 1px solid rgba(22, 163, 74, 0.3) !important;
+}
+
+.practice-hint-panel.correct-layout p {
+    text-align: left !important;
+    margin-bottom: 0 !important;
+    flex-grow: 1;
+}
+
+.next-inline-btn {
+    flex-shrink: 0;
+    padding: 8px 16px !important;
+    font-size: 0.9rem !important;
+    border-radius: 8px !important;
+    white-space: nowrap;
+    animation: pulse 2s infinite;
+}
+
 .piano-key.white.incorrect {
     background: var(--color-error) !important;
     color: white !important;
@@ -1434,19 +1475,24 @@ button {
         font-size: 0.8rem;
     }
     
-    /* Next question button area takes exact same space as answers on complete */
-    .game-actions {
-        margin-top: 2px;
-        height: 90px; /* match the keyboard height on mobile */
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    /* Mobile-specific adjustments for inline Next button and markers */
+    .practice-hint-panel.correct-layout {
+        padding: 4px 8px;
+        gap: 6px;
     }
     
-    .game-actions .primary-btn {
-        max-width: 100%;
-        width: 100%;
-        padding: 10px;
+    .practice-hint-panel.correct-layout p {
+        font-size: 0.65rem;
+    }
+    
+    .next-inline-btn {
+        padding: 6px 10px !important;
+        font-size: 0.75rem !important;
+    }
+    
+    .piano-key.white.correct::after {
+        font-size: 1.8rem;
+        top: 35%;
     }
     
     /* Result Screen Mobile Adjustments */

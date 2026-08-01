@@ -213,14 +213,14 @@ function renderMusicNote(clef, note, containerId = 'canvas-wrapper') {
     const wrapper = document.getElementById(containerId);
     if (!wrapper) return;
 
-    // Viewbox layout cropped to 185x160 for extreme zoom effect
+    // Viewbox layout cropped to 185x165 (Y starts at 6) to prevent overflow
     // Staff lines are drawn at Y = 50, 70, 90, 110, 130
     const staffLinesY = [50, 70, 90, 110, 130];
     const noteY = 130 - (note.step * 10);
     const noteX = 135; // centered in the narrow viewBox
 
     let svgHtml = `
-        <svg viewBox="30 10 185 160" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox="30 6 185 165" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
             <!-- 五線譜 (5 staff lines) -->
     `;
 
@@ -228,14 +228,14 @@ function renderMusicNote(clef, note, containerId = 'canvas-wrapper') {
         svgHtml += `<line class="staff-line" x1="20" y1="${y}" x2="210" y2="${y}" />`;
     });
 
-    // 音部記号の描画 (Noto Music フォントを使用)
+    // 音部記号の描画 (Noto Music フォントを使用) - サイズと位置の微調整で収まりを改善
     if (clef === 'treble') {
         svgHtml += `
-            <text x="30" y="130" font-family="'Noto Music', 'Segoe UI Symbol', sans-serif" font-size="115" class="clef-icon-svg">𝄞</text>
+            <text x="30" y="127" font-family="'Noto Music', 'Segoe UI Symbol', sans-serif" font-size="102" class="clef-icon-svg">𝄞</text>
         `;
     } else {
         svgHtml += `
-            <text x="30" y="96" font-family="'Noto Music', 'Segoe UI Symbol', sans-serif" font-size="95" class="clef-icon-svg">𝄢</text>
+            <text x="30" y="93" font-family="'Noto Music', 'Segoe UI Symbol', sans-serif" font-size="85" class="clef-icon-svg">𝄢</text>
         `;
     }
 
@@ -371,7 +371,12 @@ function getFilteredNotes(clef, diff) {
 function nextQuestion() {
     state.game.isAnswered = false;
     document.getElementById('btn-next-question').classList.add('hidden');
-    document.getElementById('practice-hint').classList.remove('hidden');
+    
+    const hintPanel = document.getElementById('practice-hint');
+    if (hintPanel) {
+        hintPanel.classList.remove('hidden');
+        hintPanel.classList.remove('correct-layout');
+    }
     
     // Show answer buttons again
     const answerSection = document.querySelector('.answer-section');
@@ -489,10 +494,10 @@ function handleAnswer(selectedName, clickedBtn) {
                 nextQuestion();
             }, 600);
         } else {
-            // Practice Mode: show "Next" button
-            const answerSection = document.querySelector('.answer-section');
-            if (answerSection) answerSection.classList.add('hidden');
+            // Practice Mode: show "Next" button inline
             document.getElementById('btn-next-question').classList.remove('hidden');
+            const hintPanel = document.getElementById('practice-hint');
+            if (hintPanel) hintPanel.classList.add('correct-layout');
             document.getElementById('hint-text').innerText = "正解です！ 🎹音が鳴りました。";
         }
     } else {
@@ -523,10 +528,10 @@ function handleAnswer(selectedName, clickedBtn) {
                 nextQuestion();
             }, 800);
         } else {
-            // Practice mode: Show detailed hint
-            const answerSection = document.querySelector('.answer-section');
-            if (answerSection) answerSection.classList.add('hidden');
+            // Practice mode: Show detailed hint and inline "Next" button
             document.getElementById('btn-next-question').classList.remove('hidden');
+            const hintPanel = document.getElementById('practice-hint');
+            if (hintPanel) hintPanel.classList.add('correct-layout');
             document.getElementById('hint-text').innerText = `正解は「${correctAnswer}」でした。 ${note.hint}`;
         }
     }
