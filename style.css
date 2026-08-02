@@ -533,31 +533,38 @@ button {
 /* Sheet Music Canvas Area */
 .sheet-music-container {
     position: relative;
-    padding: 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 220px;
+    min-height: 240px;
+    padding: 10px 10px 6px;
     background: rgba(15, 23, 42, 0.85); /* Slightly darker for contrast */
     border: 1px solid rgba(255, 255, 255, 0.12);
     overflow: hidden;
 }
 
 .sheet-music-header {
-    position: absolute;
-    top: 15px;
-    left: 15px;
+    position: relative;
+    top: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 4px;
 }
 
 #clef-indicator-badge {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 3px 12px;
+    font-size: 0.8rem;
 }
 
 #canvas-wrapper {
     width: 100%;
     max-width: 480px;
-    height: 180px;
+    height: 200px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -565,13 +572,13 @@ button {
 
 /* SVG Rendering Styles */
 .staff-line {
-    stroke: rgba(255, 255, 255, 0.25);
-    stroke-width: 1.5;
+    stroke: rgba(255, 255, 255, 0.7);
+    stroke-width: 2;
 }
 
 .ledger-line {
-    stroke: rgba(255, 255, 255, 0.5);
-    stroke-width: 2;
+    stroke: rgba(255, 255, 255, 0.85);
+    stroke-width: 2.2;
 }
 
 .clef-icon-svg {
@@ -758,28 +765,31 @@ button {
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-/* Inline next question button inside the hint panel */
+/* Stacked next question button inside the hint panel (text on top, button on bottom) */
 .practice-hint-panel.correct-layout {
     display: flex;
-    flex-direction: row;
-    justify-content: space-between;
+    flex-direction: column;
+    justify-content: center;
     align-items: center;
     padding: 10px 16px;
-    gap: 12px;
+    gap: 8px;
     background: rgba(22, 163, 74, 0.15) !important;
     border: 1px solid rgba(22, 163, 74, 0.3) !important;
 }
 
 .practice-hint-panel.correct-layout p {
-    text-align: left !important;
+    text-align: center !important;
     margin-bottom: 0 !important;
-    flex-grow: 1;
+    width: 100%;
+    font-size: 0.85rem;
+    line-height: 1.3;
 }
 
 .next-inline-btn {
-    flex-shrink: 0;
+    width: 100%;
+    max-width: 240px;
     padding: 8px 16px !important;
-    font-size: 0.9rem !important;
+    font-size: 0.85rem !important;
     border-radius: 8px !important;
     white-space: nowrap;
     animation: pulse 2s infinite;
@@ -1436,13 +1446,13 @@ button {
     
     /* Game Screen Mobile Adjustments */
     .sheet-music-container {
-        min-height: 110px;
-        padding: 6px;
-        margin-bottom: 8px;
+        min-height: 175px;
+        padding: 8px 6px 4px;
+        margin-bottom: 6px;
     }
     
     #canvas-wrapper {
-        height: 90px;
+        height: 155px;
     }
     
     .practice-hint-panel {
@@ -1475,19 +1485,22 @@ button {
         font-size: 0.8rem;
     }
     
-    /* Mobile-specific adjustments for inline Next button and markers */
+    /* Mobile-specific adjustments for stacked Next button and markers */
     .practice-hint-panel.correct-layout {
-        padding: 4px 8px;
-        gap: 6px;
+        padding: 6px 10px;
+        gap: 4px;
     }
     
     .practice-hint-panel.correct-layout p {
-        font-size: 0.65rem;
+        font-size: 0.75rem;
+        line-height: 1.25;
     }
     
     .next-inline-btn {
-        padding: 6px 10px !important;
-        font-size: 0.75rem !important;
+        width: 100%;
+        max-width: 220px;
+        padding: 5px 12px !important;
+        font-size: 0.8rem !important;
     }
     
     .piano-key.white.correct::after {
