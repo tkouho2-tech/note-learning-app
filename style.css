@@ -311,15 +311,16 @@ button {
     opacity: 0;
     transform: translateY(10px);
     transition: opacity var(--transition-normal), transform var(--transition-normal);
-    height: 100%;
+    width: 100%;
+    min-height: 100%;
     flex-direction: column;
-    overflow: hidden;
+    overflow-y: auto;
 }
 
 .screen.active {
-    display: flex;
-    opacity: 1;
-    transform: translateY(0);
+    display: flex !important;
+    opacity: 1 !important;
+    transform: translateY(0) !important;
 }
 
 /* ==========================================================================
