@@ -996,6 +996,344 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 7. Initial updates on load
+    // 7. Piano Mode & Disney Songs Engine Integration
+    initPianoMode();
+
+    // 8. Initial updates on load
     updateExplorer();
 });
+
+// ==========================================================================
+// 5. Piano Mode & Disney Song Engine
+// ==========================================================================
+
+const PIANO_NOTES_MAP = {
+    // Octave 4
+    "C4":  { freq: 261.63, step: -2, syllable: "ド", letter: "C4" },
+    "C#4": { freq: 277.18, step: -2, syllable: "ド#", letter: "C#4", isAccidental: true },
+    "D4":  { freq: 293.66, step: -1, syllable: "レ", letter: "D4" },
+    "D#4": { freq: 311.13, step: -1, syllable: "レ#", letter: "D#4", isAccidental: true },
+    "E4":  { freq: 329.63, step: 0,  syllable: "ミ", letter: "E4" },
+    "F4":  { freq: 349.23, step: 1,  syllable: "ファ", letter: "F4" },
+    "F#4": { freq: 369.99, step: 1,  syllable: "ファ#", letter: "F#4", isAccidental: true },
+    "G4":  { freq: 392.00, step: 2,  syllable: "ソ", letter: "G4" },
+    "G#4": { freq: 415.30, step: 2,  syllable: "ソ#", letter: "G#4", isAccidental: true },
+    "A4":  { freq: 440.00, step: 3,  syllable: "ラ", letter: "A4" },
+    "A#4": { freq: 466.16, step: 3,  syllable: "ラ#", letter: "A#4", isAccidental: true },
+    "B4":  { freq: 493.88, step: 4,  syllable: "シ", letter: "B4" },
+    // Octave 5
+    "C5":  { freq: 523.25, step: 5,  syllable: "ド", letter: "C5" },
+    "C#5": { freq: 554.37, step: 5,  syllable: "ド#", letter: "C#5", isAccidental: true },
+    "D5":  { freq: 587.33, step: 6,  syllable: "レ", letter: "D5" },
+    "D#5": { freq: 622.25, step: 6,  syllable: "レ#", letter: "D#5", isAccidental: true },
+    "E5":  { freq: 659.25, step: 7,  syllable: "ミ", letter: "E5" },
+    "F5":  { freq: 698.46, step: 8,  syllable: "ファ", letter: "F5" },
+    "F#5": { freq: 739.99, step: 8,  syllable: "ファ#", letter: "F#5", isAccidental: true },
+    "G5":  { freq: 783.99, step: 9,  syllable: "ソ", letter: "G5" },
+    "G#5": { freq: 830.61, step: 9,  syllable: "ソ#", letter: "G#5", isAccidental: true },
+    "A5":  { freq: 880.00, step: 10, syllable: "ラ", letter: "A5" },
+    "A#5": { freq: 932.33, step: 10, syllable: "ラ#", letter: "A#5", isAccidental: true },
+    "B5":  { freq: 987.77, step: 11, syllable: "シ", letter: "B5" }
+};
+
+const DISNEY_SONGS = {
+    free: {
+        title: "自由演奏",
+        notes: []
+    },
+    small_world: {
+        title: "小さな世界 (It's a Small World)",
+        tempo: 420,
+        notes: ["C4", "E4", "G4", "C5", "B4", "A4", "F4", "A4", "B4", "A4", "G4", "E4", "G4", "A4", "G4", "F4", "E4", "D4", "C4"]
+    },
+    mickey_march: {
+        title: "ミッキーマウス・マーチ",
+        tempo: 380,
+        notes: ["C4", "E4", "G4", "C5", "C5", "C5", "B4", "A4", "G4", "G4", "A4", "B4", "C5", "G4", "E4", "C4"]
+    },
+    wish_star: {
+        title: "星に願いを (When You Wish Upon a Star)",
+        tempo: 550,
+        notes: ["C4", "C5", "B4", "A4", "G4", "A4", "B4", "C5", "A4", "F4", "E4", "D4", "E4", "F4", "G4", "E4", "C4"]
+    },
+    let_it_go: {
+        title: "Let It Go (アナと雪の女王)",
+        tempo: 450,
+        notes: ["G4", "A4", "B4", "C5", "D5", "C5", "B4", "G4", "G4", "A4", "B4", "C5", "D5", "E5", "D5", "C5"]
+    }
+};
+
+let pianoState = {
+    mode: 'auto', // 'auto' or 'guide'
+    currentSongKey: 'small_world',
+    isPlaying: false,
+    autoTimer: null,
+    songIndex: 0,
+    guideIndex: 0
+};
+
+function initPianoMode() {
+    const btnStartPiano = document.getElementById('btn-start-piano');
+    if (btnStartPiano) {
+        btnStartPiano.addEventListener('click', () => {
+            showScreen('piano');
+            renderFullPianoKeyboard();
+            updatePianoSongDisplay();
+        });
+    }
+
+    const btnPianoBack = document.getElementById('btn-piano-back');
+    if (btnPianoBack) {
+        btnPianoBack.addEventListener('click', () => {
+            stopSongPlayback();
+            showScreen('start');
+        });
+    }
+
+    // Song Selection Handler
+    const songSelect = document.getElementById('song-select');
+    if (songSelect) {
+        songSelect.addEventListener('change', (e) => {
+            stopSongPlayback();
+            pianoState.currentSongKey = e.target.value;
+            pianoState.songIndex = 0;
+            pianoState.guideIndex = 0;
+            updatePianoSongDisplay();
+        });
+    }
+
+    // Mode Toggle Handlers
+    const btnModeAuto = document.getElementById('btn-mode-auto');
+    const btnModeGuide = document.getElementById('btn-mode-guide');
+
+    if (btnModeAuto && btnModeGuide) {
+        btnModeAuto.addEventListener('click', () => {
+            stopSongPlayback();
+            pianoState.mode = 'auto';
+            btnModeAuto.classList.add('active');
+            btnModeGuide.classList.remove('active');
+            document.getElementById('btn-song-play').classList.remove('hidden');
+            updatePianoSongDisplay();
+        });
+
+        btnModeGuide.addEventListener('click', () => {
+            stopSongPlayback();
+            pianoState.mode = 'guide';
+            btnModeGuide.classList.add('active');
+            btnModeAuto.classList.remove('active');
+            document.getElementById('btn-song-play').classList.add('hidden');
+            pianoState.guideIndex = 0;
+            updatePianoSongDisplay();
+            highlightGuideKey();
+        });
+    }
+
+    // Play & Stop buttons
+    const btnPlay = document.getElementById('btn-song-play');
+    const btnStop = document.getElementById('btn-song-stop');
+
+    if (btnPlay) {
+        btnPlay.addEventListener('click', () => {
+            startSongPlayback();
+        });
+    }
+
+    if (btnStop) {
+        btnStop.addEventListener('click', () => {
+            stopSongPlayback();
+        });
+    }
+}
+
+// 2オクターブ対応（C4〜B5）ピアノ鍵盤の動的生成
+function renderFullPianoKeyboard() {
+    const container = document.getElementById('full-piano-keyboard');
+    if (!container) return;
+
+    container.innerHTML = '';
+    
+    // 白鍵14鍵のリスト (C4〜B5)
+    const whiteKeys = [
+        { name: 'C4', label: 'ド' }, { name: 'D4', label: 'レ' }, { name: 'E4', label: 'ミ' },
+        { name: 'F4', label: 'ファ' }, { name: 'G4', label: 'ソ' }, { name: 'A4', label: 'ラ' }, { name: 'B4', label: 'シ' },
+        { name: 'C5', label: 'ド' }, { name: 'D5', label: 'レ' }, { name: 'E5', label: 'ミ' },
+        { name: 'F5', label: 'ファ' }, { name: 'G5', label: 'ソ' }, { name: 'A5', label: 'ラ' }, { name: 'B5', label: 'シ' }
+    ];
+
+    // 黒鍵10鍵のリスト
+    const blackKeys = [
+        { name: 'C#4', pos: 1 }, { name: 'D#4', pos: 2 },
+        { name: 'F#4', pos: 4 }, { name: 'G#4', pos: 5 }, { name: 'A#4', pos: 6 },
+        { name: 'C#5', pos: 8 }, { name: 'D#5', pos: 9 },
+        { name: 'F#5', pos: 11 }, { name: 'G#5', pos: 12 }, { name: 'A#5', pos: 13 }
+    ];
+
+    // 白鍵の生成
+    whiteKeys.forEach(wk => {
+        const keyBtn = document.createElement('button');
+        keyBtn.className = 'piano-key white full-key';
+        keyBtn.dataset.name = wk.name;
+
+        const label = document.createElement('span');
+        label.className = 'key-label';
+        label.innerText = wk.label;
+        keyBtn.appendChild(label);
+
+        keyBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            handleFullPianoKeyPress(wk.name, keyBtn);
+        });
+
+        container.appendChild(keyBtn);
+    });
+
+    // 黒鍵の生成 (絶対配置)
+    blackKeys.forEach(bk => {
+        const blackBtn = document.createElement('button');
+        blackBtn.className = 'piano-key black full-black-key';
+        blackBtn.dataset.name = bk.name;
+        // 黒鍵の水平位置計算: 14等分の白鍵に対して pos 番目の白鍵の間に配置
+        blackBtn.style.left = `calc((100% / 14) * ${bk.pos} - ((100% / 14) * 0.35))`;
+
+        blackBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            handleFullPianoKeyPress(bk.name, blackBtn);
+        });
+
+        container.appendChild(blackBtn);
+    });
+}
+
+function handleFullPianoKeyPress(noteName, keyElement) {
+    synth.init();
+    const noteData = PIANO_NOTES_MAP[noteName];
+    if (noteData) {
+        synth.playNote(noteData.freq);
+    }
+
+    // 押下視覚アニメーション
+    if (keyElement) {
+        keyElement.classList.add('active-press');
+        setTimeout(() => keyElement.classList.remove('active-press'), 250);
+    }
+
+    // ガイド練習モード時の判定
+    if (pianoState.mode === 'guide') {
+        const song = DISNEY_SONGS[pianoState.currentSongKey];
+        if (song && song.notes && song.notes.length > 0) {
+            const targetNote = song.notes[pianoState.guideIndex];
+            if (noteName === targetNote) {
+                pianoState.guideIndex = (pianoState.guideIndex + 1) % song.notes.length;
+                updatePianoSongDisplay();
+                highlightGuideKey();
+            }
+        }
+    } else {
+        // 自由演奏時：押された音を五線譜上に表示
+        if (noteData) {
+            renderMusicNote('treble', noteData, 'piano-canvas-wrapper');
+            const guideLabel = document.getElementById('current-song-note-name');
+            if (guideLabel) guideLabel.innerText = `演奏中の音: ${noteData.syllable} (${noteName})`;
+        }
+    }
+}
+
+// 自動演奏機能
+function startSongPlayback() {
+    stopSongPlayback();
+    const song = DISNEY_SONGS[pianoState.currentSongKey];
+    if (!song || !song.notes || song.notes.length === 0) return;
+
+    pianoState.isPlaying = true;
+    pianoState.songIndex = 0;
+    
+    document.getElementById('btn-song-play').classList.add('hidden');
+    document.getElementById('btn-song-stop').classList.remove('hidden');
+
+    function playStep() {
+        if (!pianoState.isPlaying) return;
+
+        const noteName = song.notes[pianoState.songIndex];
+        const noteData = PIANO_NOTES_MAP[noteName];
+
+        if (noteData) {
+            synth.init();
+            synth.playNote(noteData.freq);
+            renderMusicNote('treble', noteData, 'piano-canvas-wrapper');
+
+            const guideLabel = document.getElementById('current-song-note-name');
+            if (guideLabel) guideLabel.innerText = `🎵 ${song.title}: ${noteData.syllable} (${noteName}) [${pianoState.songIndex + 1}/${song.notes.length}]`;
+
+            // 鍵盤の発光アニメーション
+            const keyEl = document.querySelector(`#full-piano-keyboard .piano-key[data-name="${noteName}"]`);
+            if (keyEl) {
+                keyEl.classList.add('active-press');
+                setTimeout(() => keyEl.classList.remove('active-press'), 300);
+            }
+        }
+
+        pianoState.songIndex = (pianoState.songIndex + 1) % song.notes.length;
+    }
+
+    playStep();
+    pianoState.autoTimer = setInterval(playStep, song.tempo || 450);
+}
+
+function stopSongPlayback() {
+    pianoState.isPlaying = false;
+    if (pianoState.autoTimer) {
+        clearInterval(pianoState.autoTimer);
+        pianoState.autoTimer = null;
+    }
+    const btnPlay = document.getElementById('btn-song-play');
+    const btnStop = document.getElementById('btn-song-stop');
+    if (btnPlay) btnPlay.classList.remove('hidden');
+    if (btnStop) btnStop.classList.add('hidden');
+
+    // ガイドキーの発光をクリア
+    document.querySelectorAll('#full-piano-keyboard .piano-key').forEach(k => {
+        k.classList.remove('guided');
+    });
+}
+
+function highlightGuideKey() {
+    // 既存のガイド発光をリセット
+    document.querySelectorAll('#full-piano-keyboard .piano-key').forEach(k => {
+        k.classList.remove('guided');
+    });
+
+    const song = DISNEY_SONGS[pianoState.currentSongKey];
+    if (!song || !song.notes || song.notes.length === 0) return;
+
+    const targetNote = song.notes[pianoState.guideIndex];
+    const keyEl = document.querySelector(`#full-piano-keyboard .piano-key[data-name="${targetNote}"]`);
+    if (keyEl) {
+        keyEl.classList.add('guided');
+    }
+}
+
+function updatePianoSongDisplay() {
+    const song = DISNEY_SONGS[pianoState.currentSongKey];
+    const guideLabel = document.getElementById('current-song-note-name');
+    
+    if (pianoState.currentSongKey === 'free' || !song || song.notes.length === 0) {
+        renderMusicNote('treble', PIANO_NOTES_MAP['C4'], 'piano-canvas-wrapper');
+        if (guideLabel) guideLabel.innerText = "鍵盤を押して自由に演奏してみましょう！";
+        return;
+    }
+
+    const currentNoteName = pianoState.mode === 'guide' ? song.notes[pianoState.guideIndex] : song.notes[0];
+    const noteData = PIANO_NOTES_MAP[currentNoteName];
+
+    if (noteData) {
+        renderMusicNote('treble', noteData, 'piano-canvas-wrapper');
+    }
+
+    if (guideLabel) {
+        if (pianoState.mode === 'guide') {
+            guideLabel.innerText = `🎹 次の音: 「${noteData ? noteData.syllable : ''}」 を押してください！ (${pianoState.guideIndex + 1}/${song.notes.length})`;
+        } else {
+            guideLabel.innerText = `🎵 曲: ${song.title} (「再生▶」ボタンを押してください)`;
+        }
+    }
+}

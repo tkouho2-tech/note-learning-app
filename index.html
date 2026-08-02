@@ -87,6 +87,16 @@
                     </button>
                 </div>
 
+                <div class="menu-actions secondary-actions">
+                    <button id="btn-start-piano" class="primary-btn piano-mode-btn">
+                        <span class="btn-content">
+                            <span class="icon">🎹</span>
+                            ピアノ自由演奏 & ディズニー曲
+                        </span>
+                        <span class="btn-sub">横画面対応・名曲メロディ演奏</span>
+                    </button>
+                </div>
+
                 <div class="explorer-trigger-container">
                     <button id="btn-show-explorer" class="explorer-trigger-btn">
                         <span>📖</span> 音符と音の確認 (音符図鑑) を開く ➔
@@ -261,6 +271,58 @@
                     <div class="explorer-scroll-container">
                         <div id="explorer-canvas-wrapper" class="explorer-canvas-scroll">
                             <!-- ここに選択された記号の横長SVGが動的に生成される -->
+                        </div>
+                    </div>
+                </div>
+            <!-- 6. ピアノ自由演奏 & ディズニー楽曲再生画面 -->
+            <section id="screen-piano" class="screen">
+                <div class="glass-card piano-mode-card">
+                    <div class="piano-mode-header">
+                        <div class="piano-mode-title">
+                            <h2>🎹 ピアノ自由演奏 & ディズニー曲メロディ</h2>
+                            <span class="landscape-badge">📱 スマホを横に傾けると大画面で演奏できます</span>
+                        </div>
+                        <button id="btn-piano-back" class="close-btn">&times;</button>
+                    </div>
+
+                    <!-- 楽曲選択 & 再生コントロール -->
+                    <div class="song-control-panel">
+                        <div class="control-group">
+                            <label for="song-select">楽曲の選択:</label>
+                            <select id="song-select" class="song-select-dropdown">
+                                <option value="free">自由演奏 (曲なし)</option>
+                                <option value="small_world" selected>✨ 小さな世界 (It's a Small World)</option>
+                                <option value="mickey_march">🐭 ミッキーマウス・マーチ</option>
+                                <option value="wish_star">⭐ 星に願いを (When You Wish Upon a Star)</option>
+                                <option value="let_it_go">❄️ Let It Go (アナと雪の女王)</option>
+                            </select>
+                        </div>
+
+                        <div class="control-group mode-group">
+                            <button id="btn-mode-auto" class="mode-toggle-btn active">🎵 自動演奏</button>
+                            <button id="btn-mode-guide" class="mode-toggle-btn">🎹 メロディガイド練習</button>
+                        </div>
+
+                        <div class="control-group action-group">
+                            <button id="btn-song-play" class="primary-btn play-btn">▶ 再生</button>
+                            <button id="btn-song-stop" class="secondary-btn stop-btn hidden">⏹ 停止</button>
+                        </div>
+                    </div>
+
+                    <!-- 楽譜・音符表示カード -->
+                    <div class="piano-sheet-card">
+                        <div id="piano-canvas-wrapper" class="piano-canvas">
+                            <!-- JSで現在アサインされている曲の五線譜と音符を描画 -->
+                        </div>
+                        <div id="piano-song-info" class="song-info-banner">
+                            <span id="current-song-note-name" class="note-guide-label">鍵盤を押すか、再生ボタンを押してください！</span>
+                        </div>
+                    </div>
+
+                    <!-- 2オクターブ広大ピアノ鍵盤 -->
+                    <div class="full-piano-wrapper">
+                        <div class="piano-keyboard full-keyboard" id="full-piano-keyboard">
+                            <!-- JSでC4〜B5の白鍵14鍵＋黒鍵10鍵を動的生成 -->
                         </div>
                     </div>
                 </div>

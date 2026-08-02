@@ -1611,3 +1611,249 @@ button {
         font-size: 0.65rem;
     }
 }
+
+/* ==========================================================================
+   Piano Mode & Disney Song Playback Styles
+   ========================================================================== */
+
+.piano-mode-btn {
+    background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 50%, #3b82f6 100%) !important;
+    box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3) !important;
+}
+
+.piano-mode-btn:hover {
+    box-shadow: 0 6px 20px rgba(236, 72, 153, 0.5) !important;
+    transform: translateY(-2px);
+}
+
+.piano-mode-card {
+    max-width: 900px;
+    width: 100%;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.piano-mode-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 8px;
+}
+
+.piano-mode-title h2 {
+    font-size: 1.2rem;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.landscape-badge {
+    font-size: 0.75rem;
+    color: var(--accent-light);
+    opacity: 0.85;
+}
+
+/* Song Controls */
+.song-control-panel {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.04);
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.control-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.control-group label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.song-select-dropdown {
+    background: rgba(15, 23, 42, 0.8);
+    color: var(--text-primary);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    outline: none;
+    cursor: pointer;
+}
+
+.mode-toggle-btn {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.mode-toggle-btn.active {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 10px rgba(99, 102, 241, 0.4);
+}
+
+.play-btn {
+    padding: 6px 18px !important;
+    font-size: 0.85rem !important;
+}
+
+.stop-btn {
+    padding: 6px 18px !important;
+    font-size: 0.85rem !important;
+}
+
+/* Piano Sheet Display */
+.piano-sheet-card {
+    background: rgba(15, 23, 42, 0.9);
+    border-radius: 12px;
+    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.piano-canvas {
+    width: 100%;
+    height: 140px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.song-info-banner {
+    margin-top: 4px;
+    text-align: center;
+}
+
+.note-guide-label {
+    font-size: 0.85rem;
+    color: #38bdf8;
+    font-weight: 600;
+}
+
+/* 2 Octave Keyboard Layout (14 White Keys) */
+.full-piano-wrapper {
+    width: 100%;
+    margin-top: 4px;
+}
+
+.full-keyboard {
+    height: 120px !important;
+    border-width: 3px;
+}
+
+.piano-key.full-key {
+    width: calc(100% / 14) !important;
+    padding-bottom: 8px;
+}
+
+.full-key .key-label {
+    font-size: 0.75rem;
+}
+
+.piano-key.full-black-key {
+    width: calc((100% / 14) * 0.7) !important;
+    height: 60% !important;
+}
+
+/* Guided Key Highlight Animation */
+.piano-key.guided {
+    background: #38bdf8 !important;
+    color: #0f172a !important;
+    box-shadow: 0 0 18px #38bdf8, inset 0 -4px 0 #0284c7 !important;
+    animation: guidePulse 1.2s infinite ease-in-out;
+}
+
+.piano-key.guided .key-label {
+    color: #0f172a !important;
+    font-weight: bold;
+}
+
+@keyframes guidePulse {
+    0%, 100% {
+        box-shadow: 0 0 12px #38bdf8, inset 0 -4px 0 #0284c7;
+    }
+    50% {
+        box-shadow: 0 0 25px #38bdf8, inset 0 -4px 0 #0284c7;
+        background: #7dd3fc !important;
+    }
+}
+
+/* Pressed State */
+.piano-key.active-press {
+    transform: translateY(2px) !important;
+    background: var(--color-success) !important;
+    box-shadow: inset 0 -2px 0 var(--color-success-glow) !important;
+}
+
+/* ==========================================================================
+   Smartphone Landscape Orientation Adjustments
+   ========================================================================== */
+
+@media (orientation: landscape) and (max-height: 550px) {
+    .app-container {
+        padding: 4px;
+    }
+
+    .piano-mode-card {
+        padding: 8px;
+        gap: 6px;
+    }
+
+    .piano-mode-header {
+        padding-bottom: 4px;
+    }
+
+    .piano-mode-title h2 {
+        font-size: 0.95rem;
+    }
+
+    .landscape-badge {
+        display: none; /* Hide badge on active landscape */
+    }
+
+    .song-control-panel {
+        padding: 4px 8px;
+        gap: 6px;
+    }
+
+    .song-select-dropdown, .mode-toggle-btn {
+        padding: 3px 8px;
+        font-size: 0.75rem;
+    }
+
+    .piano-sheet-card {
+        padding: 4px;
+    }
+
+    .piano-canvas {
+        height: 85px;
+    }
+
+    .note-guide-label {
+        font-size: 0.75rem;
+    }
+
+    .full-keyboard {
+        height: 110px !important;
+    }
+}
+
