@@ -1053,8 +1053,18 @@ const DISNEY_SONGS = {
     },
     wish_star: {
         title: "星に願いを (When You Wish Upon a Star)",
-        tempo: 550,
-        notes: ["C4", "C5", "B4", "A4", "G4", "A4", "B4", "C5", "A4", "F4", "E4", "D4", "E4", "F4", "G4", "E4", "C4"]
+        tempo: 600,
+        notes: [
+            "G4:1", 
+            "G5:1", "F5:1", "E5:2",
+            "C#5:1", "D5:1", "A4:2",
+            "B4:1", "B4:1", "A4:1", "G4:1",
+            "F#4:1", "G4:1", "C5:2",
+            "D5:1", "C5:1", "B4:1", "A4:1",
+            "G4:1", "F4:1", "E4:1", "D4:1",
+            "A4:2", "B4:2",
+            "G4:3", "REST:1"
+        ]
     },
     let_it_go: {
         title: "Let It Go (アナと雪の女王)",
@@ -1221,7 +1231,15 @@ function handleFullPianoKeyPress(noteName, keyElement) {
     if (pianoState.mode === 'guide') {
         const song = DISNEY_SONGS[pianoState.currentSongKey];
         if (song && song.notes && song.notes.length > 0) {
-            const targetNote = song.notes[pianoState.guideIndex];
+            let targetNoteRaw = song.notes[pianoState.guideIndex];
+            let targetNote = typeof targetNoteRaw === 'string' && targetNoteRaw.includes(':') ? targetNoteRaw.split(':')[0] : targetNoteRaw;
+            
+            while (targetNote === "REST") {
+                pianoState.guideIndex = (pianoState.guideIndex + 1) % song.notes.length;
+                targetNoteRaw = song.notes[pianoState.guideIndex];
+                targetNote = typeof targetNoteRaw === 'string' && targetNoteRaw.includes(':') ? targetNoteRaw.split(':')[0] : targetNoteRaw;
+            }
+
             if (noteName === targetNote) {
                 pianoState.guideIndex = (pianoState.guideIndex + 1) % song.notes.length;
                 updatePianoSongDisplay();
@@ -1253,36 +1271,45 @@ function startSongPlayback() {
     function playStep() {
         if (!pianoState.isPlaying) return;
 
-        const noteName = song.notes[pianoState.songIndex];
-        const noteData = PIANO_NOTES_MAP[noteName];
+        let noteEntry = song.notes[pianoState.songIndex];
+        let noteName = typeof noteEntry === 'string' && noteEntry.includes(':') ? noteEntry.split(':')[0] : noteEntry;
+        let durationMulti = typeof noteEntry === 'string' && noteEntry.includes(':') ? parseFloat(noteEntry.split(':')[1]) : 1;
+        
+        let playDurationMs = (song.tempo || 450) * durationMulti;
 
-        if (noteData) {
-            synth.init();
-            synth.playNote(noteData.freq);
-            renderMusicNote('treble', noteData, 'piano-canvas-wrapper');
-
+        if (noteName === "REST") {
             const guideLabel = document.getElementById('current-song-note-name');
-            if (guideLabel) guideLabel.innerText = `🎵 ${song.title}: ${noteData.syllable} (${noteName}) [${pianoState.songIndex + 1}/${song.notes.length}]`;
+            if (guideLabel) guideLabel.innerText = `🎵 ${song.title}: 休符 [${pianoState.songIndex + 1}/${song.notes.length}]`;
+        } else {
+            const noteData = PIANO_NOTES_MAP[noteName];
+            if (noteData) {
+                synth.init();
+                synth.playNote(noteData.freq, Math.min(playDurationMs / 1000, 2.0));
+                renderMusicNote('treble', noteData, 'piano-canvas-wrapper');
 
-            // 鍵盤の発光アニメーション
-            const keyEl = document.querySelector(`#full-piano-keyboard .piano-key[data-name="${noteName}"]`);
-            if (keyEl) {
-                keyEl.classList.add('active-press');
-                setTimeout(() => keyEl.classList.remove('active-press'), 300);
+                const guideLabel = document.getElementById('current-song-note-name');
+                if (guideLabel) guideLabel.innerText = `🎵 ${song.title}: ${noteData.syllable} (${noteName}) [${pianoState.songIndex + 1}/${song.notes.length}]`;
+
+                // 鍵盤の発光アニメーション
+                const keyEl = document.querySelector(`#full-piano-keyboard .piano-key[data-name="${noteName}"]`);
+                if (keyEl) {
+                    keyEl.classList.add('active-press');
+                    setTimeout(() => keyEl.classList.remove('active-press'), Math.min(playDurationMs * 0.8, 500));
+                }
             }
         }
 
         pianoState.songIndex = (pianoState.songIndex + 1) % song.notes.length;
+        pianoState.autoTimer = setTimeout(playStep, playDurationMs);
     }
 
     playStep();
-    pianoState.autoTimer = setInterval(playStep, song.tempo || 450);
 }
 
 function stopSongPlayback() {
     pianoState.isPlaying = false;
     if (pianoState.autoTimer) {
-        clearInterval(pianoState.autoTimer);
+        clearTimeout(pianoState.autoTimer);
         pianoState.autoTimer = null;
     }
     const btnPlay = document.getElementById('btn-song-play');
@@ -1305,10 +1332,18 @@ function highlightGuideKey() {
     const song = DISNEY_SONGS[pianoState.currentSongKey];
     if (!song || !song.notes || song.notes.length === 0) return;
 
-    const targetNote = song.notes[pianoState.guideIndex];
-    const keyEl = document.querySelector(`#full-piano-keyboard .piano-key[data-name="${targetNote}"]`);
-    if (keyEl) {
-        keyEl.classList.add('guided');
+    let targetNoteRaw = song.notes[pianoState.guideIndex];
+    let targetNote = typeof targetNoteRaw === 'string' && targetNoteRaw.includes(':') ? targetNoteRaw.split(':')[0] : targetNoteRaw;
+
+    while (targetNote === "REST") {
+        pianoState.guideIndex = (pianoState.guideIndex + 1) % song.notes.length;
+        targetNoteRaw = song.notes[pianoState.guideIndex];
+        targetNote = typeof targetNoteRaw === 'string' && targetNoteRaw.includes(':') ? targetNoteRaw.split(':')[0] : targetNoteRaw;
+    }
+
+    if (targetNote) {
+        const keyEl = document.querySelector(`#full-piano-keyboard .piano-key[data-name="${targetNote}"]`);
+        if (keyEl) keyEl.classList.add('guided');
     }
 }
 
